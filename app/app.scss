@@ -1,0 +1,86 @@
+
+* {
+  font-family: courier;
+  font-size: 12px;
+}
+#grid {
+  display: inline-block;
+}
+
+.gridTile {
+  display: inline-block;
+}
+
+
+/* BUTTONS */
+
+button {
+  color: black;
+  border: 2px outset white;
+  background: #eee;
+  padding: 4px;
+  margin: 2px;
+  text-decoration: none;
+  width: 100px;
+}
+
+button:hover {
+  background: #f5f5f5;
+}
+
+button:active {
+  border-style: inset;
+}
+
+button:focus {
+  outline: 0;
+}
+
+button:disabled,
+button[disabled] {
+  border: 1px solid #999999;
+  background-color: #cccccc;
+  color: #666666;
+}
+
+.cancelButton {
+  border: none;
+  background-color: inherit;
+  color: #ff5252;
+  font-size: 12px;
+  width: 65px;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.cancelButton:hover {
+  border: none;
+  color: #ff8a80;
+  background-color: inherit;
+}
+
+.cancelButton:active {
+  border: none;
+  color: #ff1744;
+  background-color: inherit;
+}
+
+.minerButton {
+  background: #ffe082;
+}
+
+.minerButton:hover {
+  background: #ffecb3;
+}
+
+.defenseButton {
+  background: #90caf9;
+}
+
+.defenseButton:hover {
+  background: #bbdefb;
+}
+
+.gridTile {
+  font-weight: 900;
+}
