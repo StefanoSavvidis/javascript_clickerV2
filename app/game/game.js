@@ -30,7 +30,7 @@ class Game {
     this.mineWidth = 1;
     this.width = this.attackWidth + this.defenseWidth + this.mineWidth + 1;
     this.height = 7;
-    this.gold = 2500000;
+    this.gold = 25;
 
     
 
