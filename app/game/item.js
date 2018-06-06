@@ -10,9 +10,6 @@ class Item {
     this.type = type
   }
 
-  static options() {
-  }
-
 }
 
 export default Item;

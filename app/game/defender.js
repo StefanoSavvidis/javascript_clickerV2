@@ -9,7 +9,6 @@ class Defender extends Item {
     this.growthRate = growthRate
   
     this.timeElapsed = 0;
-
     this.activated = false
   }
 
