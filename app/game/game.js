@@ -3,6 +3,7 @@ import Miner from './miner';
 
 import Orc from './attackers/orc'
 import Ogre from './attackers/ogre'
+import Goblin from './attackers/goblin'
 
 import Hobo from './defenders/hobo'
 import Villager from './defenders/villager'
@@ -18,6 +19,9 @@ import Quarry from './miners/quarry'
 
 import Box from './box'
 
+
+const longLine = '+---------------------------------------------------+'
+const shortLine = '+-------------------------------+'
 class Game {
 
   constructor() {
@@ -26,7 +30,9 @@ class Game {
     this.mineWidth = 1;
     this.width = this.attackWidth + this.defenseWidth + this.mineWidth + 1;
     this.height = 7;
-    this.gold = 100000;
+    this.gold = 25;
+
+    
 
     this.enemyOptions = [new Orc()]
     this.minerOptions = [new Pickaxe(), new Dynamite(), new RailCart(), new Quarry()]
@@ -51,6 +57,7 @@ class Game {
     this.gridSection = document.getElementById('grid');
     this.topUISection = document.getElementById('topUI');
     this.waveSection = document.getElementById('waveUI');
+    this.placeSection = document.getElementById('placeUI');
     this.bottomUISection = document.getElementById('bottomUI');
     this.sideUISection = document.getElementById('sideUI');
     
@@ -70,13 +77,18 @@ class Game {
     this.buildGrid()
     this.setupBottomUI()
 
-    this.spawnWave()
-    this.checkpoint = 14;
+    this.checkpoint = 20;
     this.checkpointCounter = 0;
+    this.checkpointGrowthRate = 1.14;
 
+    
     this.goldChanged = false;
+    this.goldChangedPositiveAmount = 0;
+    this.goldChangedNegativeAmount = 0;
     this.goldChangedAmount = 0;
     this.goldChangedCounter = 0;
+
+    this.sellPercent = 0.65;
   }
 
   buildGrid() {
@@ -121,7 +133,7 @@ class Game {
     for (let i = 0; i < this.width; i++) {
       for (let j = 0; j < this.height; j++) {
         let builtGrid = document.getElementById(`${i}, ${j}A`)
-        //console.log(builtGrid)
+
         this.boxBackgroundColor(this.boxes[i][j], builtGrid)
         builtGrid = document.getElementById(`${i}, ${j}B`)
         this.boxBackgroundColor(this.boxes[i][j], builtGrid)
@@ -154,20 +166,24 @@ class Game {
             this.selectedItem.y = y;
             this.items.push(this.selectedItem)
             this.selectedItem = null;
+            this.setupBottomUI()
           }
           
 
         } else {
+          
           this.itemChosen = null
           this.sideUISection.innerHTML = ''
         }
       }
+      
     }
 
   }
 
   buyItem(item, box) {
     if (this.gold >= item.costBase && box.type == item.type) {
+      item.totalInvested += item.costBase
       this.changeGold(item.costBase * -1)
       return true
     } else {
@@ -189,21 +205,24 @@ class Game {
         color = '#42a5f5'
       } else if (item.type == 'Attacker') {
         if (item.damaged == true) {
-          console.log(item.health)
+  
           item.damagedCounter += 1;
           
           if (item.damagedCounter > 15) {
             if (item.health <= 0) {
-              
-              
+
+              if (this.itemChosen == item) {
+                this.itemChosen = null
+                this.sideUISection.innerHTML = ''
+
+              }
+              //this.updateSideUI()
               //this.boxes[item.x][item.y].item = null
               this.emptyBox(item.x, item.y)
               
               this.removeItem(item)
               this.boxes[item.x][item.y].item = null
-              console.log(this.boxes[item.x][item.y].item)
-              console.log(this.boxes)
-              console.log(this.items)
+
               return;
             }
             item.damaged = false
@@ -229,17 +248,53 @@ class Game {
   }
 
   spawnWave() {
-    let ySpawn = Math.floor(Math.random() * this.height)
-    ySpawn = 0
-    let enemy1 = new Orc(0, ySpawn)
-    let enemy2 = new Ogre(0, ySpawn + 1)
-    
-    console.log(this.boxes[0][ySpawn])
-    this.boxes[0][ySpawn].item = enemy1;
-    this.items.push(enemy1)
 
-    this.boxes[0][ySpawn + 1].item = enemy2;
-    this.items.push(enemy2)
+    let spawnAmount = this.checkpointCounter
+    let strongSpawn = Math.floor(spawnAmount/20)
+    spawnAmount -= (strongSpawn * 20)
+    let normalSpawn = Math.floor(spawnAmount/5)
+    spawnAmount -= (normalSpawn * 5)
+    let weakSpawn = Math.floor(spawnAmount % 5)
+  
+    let ySpawn = 0;
+
+    console.log('S: ' + strongSpawn + ', N: ' + normalSpawn + ', W: ' + weakSpawn)
+
+
+    let spawnAtemptCounter = 0;
+    for (let i = 0; i < strongSpawn; i++) {
+      do {
+        ySpawn = Math.floor(Math.random() * this.height)
+        spawnAtemptCounter += 1;
+      } while(this.boxes[0][ySpawn].item && spawnAtemptCounter < 9);
+      let tempEnemy = new Ogre(0, ySpawn)
+      this.boxes[0][ySpawn].item = tempEnemy;
+      this.items.push(tempEnemy)
+    }
+    spawnAtemptCounter = 0;
+    for (let i = 0; i < normalSpawn; i++) {
+      do {
+        ySpawn = Math.floor(Math.random() * this.height)
+        spawnAtemptCounter += 1
+      } while (this.boxes[0][ySpawn].item && spawnAtemptCounter < 9);
+      let tempEnemy = new Orc(0, ySpawn)
+      this.boxes[0][ySpawn].item = tempEnemy;
+      this.items.push(tempEnemy)
+    }
+
+    spawnAtemptCounter = 0;
+    for (let i = 0; i < weakSpawn; i++) {
+      do {
+        ySpawn = Math.floor(Math.random() * this.height)
+        spawnAtemptCounter += 1
+      } while (this.boxes[0][ySpawn].item && spawnAtemptCounter < 9);
+      let tempEnemy = new Goblin(0, ySpawn)
+      this.boxes[0][ySpawn].item = tempEnemy;
+      this.items.push(tempEnemy)
+    }
+
+    //this.boxes[0][ySpawn + 1].item = enemy2;
+    //this.items.push(enemy2)
   }
 
   removeItem(item) {
@@ -252,13 +307,12 @@ class Game {
     });
 
     this.items.splice(removeItemIndex, 1)
-    console.log(this.boxes)
-    console.log(this.items)
+
   }
 
   moveAttackerForward(item) {
     if (item.x < this.attackWidth - 1) {
-      console.log('moved')
+
       let oldX = item.x
       let oldY = item.y
       item.x += 1
@@ -266,8 +320,6 @@ class Game {
       this.emptyBox(oldX, oldY)
       this.boxes[item.x][item.y].item = item
     } else if (item.x = this.attackWidth - 1) {
-      //console.log(this.items)
-      //console.log(item)
 
       this.removeItem(item)
 
@@ -281,16 +333,23 @@ class Game {
 
   changeGold(amount) {
     this.gold += amount
-
+    if (this.gold < 0) {
+      this.gold = 0;
+    }
     if (amount != 0) {
       this.goldChanged = true;
       this.goldChangedAmount = amount;
+      if (amount > 0) {
+        this.goldChangedPositiveAmount += amount
+      } else {
+        this.goldChangedNegativeAmount += amount
+      }
     }
   }
-  update() {
-    this.updateGold()
 
-    
+  update() {
+
+    this.updateGold()
 
     let miners = this.items.filter(item => item.type == 'Miner')
 
@@ -299,7 +358,7 @@ class Game {
     }, 0);
 
     if (this.checkpoint <= this.goldPerSecond) {
-      this.checkpoint *= 1.3;
+      this.checkpoint *= this.checkpointGrowthRate;
       this.checkpointCounter += 1;
       this.spawnWave()
     }
@@ -319,14 +378,15 @@ class Game {
           if (attackers.length > 0) {
             if (attackers[0].activated) {
               attackers[0].health -= item.defenseBase
-       
+              if (this.itemChosen == attackers[0]) {
+                this.updateSideUI()
+              }
               attackers[0].damaged = true;
               item.timeElapsed = 0;
               item.activated = false;
               
             }
           }
-          //console.log(attackers.length)
         }
       } else if (item.type == 'Attacker') {
         if (item.countDown(1/60)){
@@ -365,6 +425,12 @@ class Game {
     } else {
       this.topUISection.innerHTML = 'Gold: ' + Math.round(this.gold)
     }
+
+    this.waveSection.innerHTML = 'Wave: ' + this.checkpointCounter;
+    this.placeSection.innerHTML = 'Place: '
+    if (this.selectedItem) {
+      this.placeSection.innerHTML += this.selectedItem.title
+    }
   }
 
   assignBoxTypes(box) {
@@ -399,16 +465,18 @@ class Game {
   }
 
   updateTracker() {
-    let progress = Math.round(10 * this.itemChosen.percentProgress)
-    let tracker = "+".repeat(progress) + "-".repeat(10 - progress)
-    let trackerArea = document.getElementById('trackerTimer')
-    trackerArea.innerHTML = '[' + tracker + ']'
+
+    if (this.itemChosen.type != 'Attacker') {
+      let progress = Math.round(10 * this.itemChosen.percentProgress)
+      let tracker = "+".repeat(progress) + "-".repeat(10 - progress)
+      let trackerArea = document.getElementById('trackerTimer')
+      trackerArea.innerHTML = '[' + tracker + ']'
+    }
+    
   }
 
   updateSideUI() {
-
-    
-    this.sideUISection.innerHTML = '+---------------------------------------------------+'
+    this.sideUISection.innerHTML = longLine
     this.sideUISection.innerHTML += '<p>' + this.itemChosen.title + '</p><p id="trackerTimer"></p><br>'
     if (this.itemChosen.type == 'Miner') {
       this.sideUISection.innerHTML += `<p>Time: ${Math.round(this.itemChosen.timeToComplete * 100) /100}s</p>`
@@ -427,9 +495,16 @@ class Game {
         this.sideUISection.innerHTML += '<p>Operator</p>'
         this.sideUISection.innerHTML += `<div id="upgradeButton"><button class="sideUI">Upgrade Op</button><p class="sideUI">Speed up mining time (${Math.round(this.itemChosen.operator.cost)} Gold)</p></div>`
       }
-
+      this.sideUISection.innerHTML += '<br>' + shortLine + '<br>'
+      this.sideUISection.innerHTML += `<button class="sellButton">Sell</button><p class="itemDescription">${Math.round(this.itemChosen.totalInvested * this.sellPercent)} Gold</p><br>`
       this.updateTracker(this.itemChosen)
+    } else if (this.itemChosen.type == 'Defender') {
+      this.sideUISection.innerHTML += '<br>' + shortLine + '<br>'
+      this.sideUISection.innerHTML += `<button class="sellButton">Sell</button><p class="itemDescription">${Math.round(this.itemChosen.totalInvested * this.sellPercent)} Gold</p><br>`
+    } else if (this.itemChosen.type == 'Attacker') {
+      this.sideUISection.innerHTML += `<p>Health: ${this.itemChosen.health}</p>`
     }
+    this.sideUISection.innerHTML += longLine + '<br>'
   }
 
   setupBottomUI() {
@@ -444,20 +519,35 @@ class Game {
     this.listSection.addEventListener('click', function () {
       self.itemSelected()
     });
+    this.buttonSection.innerHTML = '+---------------------------------------------------+<br>'
     this.buttonSection.innerHTML += '<button>Defenders</button><button>Miners</button>'
+    
+    if (this.selectedItem) {
+      this.buttonSection.innerHTML += '<button class="cancelButton">Cancel</button>'
+    }
   }
 
   titleButtonPressed(){
+    
     if (event.target.textContent == 'Miners') {
       this.listSection.innerHTML = '+---------------------------------------------------+<br>'
       this.minerOptions.forEach((option) => {
-        this.listSection.innerHTML += `<button>${option.title}</button>`
+        this.listSection.innerHTML += `<button class="itemOption">${option.title}</button>`
+        this.listSection.innerHTML += `<p class="itemDescription">Price: ${option.costBase}, Time: ${option.timeToComplete}s, Revenue: ${option.revenueBase} Gold</p>`
+        this.listSection.innerHTML += '<br>'
       })
     } else if (event.target.textContent == 'Defenders') {
       this.listSection.innerHTML = '+---------------------------------------------------+<br>'
       this.defenderOptions.forEach((option) => {
-        this.listSection.innerHTML += `<button>${option.title}</button>`
+        this.listSection.innerHTML += `<button class="itemOption">${option.title}</button>`
+        this.listSection.innerHTML += `<p class="itemDescription">Price: ${option.costBase}, Time: ${option.timeToDefend}s, Defense: ${option.defenseBase}</p>`
+        this.listSection.innerHTML += '<br>'
+        
       })
+    } else if (event.target.textContent == 'Cancel') {
+
+      this.selectedItem = null
+      this.setupBottomUI()
     }
   }
 
@@ -469,6 +559,7 @@ class Game {
       this.selectedItem = this.selectedItem[0]
       this.selectedItem = new this.selectedItem.constructor()
 
+
     } else {
       this.selectedItem = this.defenderOptions.filter(option => option.title == event.target.textContent)
       if (this.selectedItem[0]) {
@@ -477,7 +568,7 @@ class Game {
 
       }
     }
-
+    this.setupBottomUI()
   }
 
   mouseChanger() {
@@ -491,23 +582,35 @@ class Game {
   minerAction() {
     if (event.target.textContent == 'Upgrade') {
       if (this.gold >= this.itemChosen.cost) {
+        this.itemChosen.totalInvested += this.itemChosen.cost
         this.changeGold(this.itemChosen.cost * -1)
         this.itemChosen.upgrade()
         this.updateSideUI()
       }
-      
+  
     } else if (event.target.textContent == 'Mine') {
       this.itemChosen.activated = true
     } else if (event.target.textContent == 'Operator') {
       if (this.gold >= this.itemChosen.operatorCost) {
+        this.itemChosen.totalInvested += this.itemChosen.operatorCost
+        this.changeGold(this.itemChosen.operatorCost * -1)
         this.itemChosen.buyOperator()
         this.updateSideUI()
       }
     } else if (event.target.textContent == 'Upgrade Op') {
       if (this.gold >= this.itemChosen.operator.cost) {
+        this.itemChosen.totalInvested += this.itemChosen.operator.cost
         this.changeGold(this.itemChosen.operator.cost * -1)
         this.itemChosen.operator.upgrade()
       }
+    } else if (event.target.textContent == 'Sell'){
+      this.sideUISection.innerHTML = ''
+      this.changeGold(Math.round(this.itemChosen.totalInvested * this.sellPercent))
+      this.emptyBox(this.itemChosen.x, this.itemChosen.y)
+      
+      this.removeItem(this.itemChosen)
+      this.boxes[this.itemChosen.x][this.itemChosen.y].item = null
+      this.itemChosen = null
     }
   }
 

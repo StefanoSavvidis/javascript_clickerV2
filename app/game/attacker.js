@@ -23,8 +23,6 @@ class Attacker extends Item {
 
 
   countDown(frameRate) {
-
-    //console.log('THIS: ' + this.x + ', ' + this.y)
    
     if (this.x == 0) {
 

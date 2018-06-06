@@ -48,7 +48,6 @@ class Miner extends Item {
         this.timeToComplete = this.baseTimeToComplete * this.operator.speedMultiplier;
         this.operator.upgraded = false;
         this.updateUI = true;
-        console.log(this.timeToComplete)
       }
     }
 

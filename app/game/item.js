@@ -8,6 +8,8 @@ class Item {
     this.title = title;
     this.ascii = ascii;
     this.type = type
+
+    this.totalInvested = 0;
   }
 
 }
