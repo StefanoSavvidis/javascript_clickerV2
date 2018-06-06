@@ -50,6 +50,7 @@ class Game {
 
     this.gridSection = document.getElementById('grid');
     this.topUISection = document.getElementById('topUI');
+    this.waveSection = document.getElementById('waveUI');
     this.bottomUISection = document.getElementById('bottomUI');
     this.sideUISection = document.getElementById('sideUI');
     
@@ -72,6 +73,10 @@ class Game {
     this.spawnWave()
     this.checkpoint = 14;
     this.checkpointCounter = 0;
+
+    this.goldChanged = false;
+    this.goldChangedAmount = 0;
+    this.goldChangedCounter = 0;
   }
 
   buildGrid() {
@@ -163,7 +168,7 @@ class Game {
 
   buyItem(item, box) {
     if (this.gold >= item.costBase && box.type == item.type) {
-      this.gold -= item.costBase;
+      this.changeGold(item.costBase * -1)
       return true
     } else {
       return false;
@@ -268,12 +273,20 @@ class Game {
 
       this.boxes[item.x][item.y].item = null
       this.emptyBox(item.x, item.y)
-      this.gold -= item.theftAmount;
+      this.changeGold(item.theftAmount * -1)
 
     }
 
   }
 
+  changeGold(amount) {
+    this.gold += amount
+
+    if (amount != 0) {
+      this.goldChanged = true;
+      this.goldChangedAmount = amount;
+    }
+  }
   update() {
     this.updateGold()
 
@@ -295,7 +308,7 @@ class Game {
       this.drawItemBox(item.x, item.y, item)
       if (item.type == 'Miner') {
         
-        this.gold += item.countDown(1 / 60);      
+        this.changeGold(item.countDown(1 / 60));      
         
 
       } else if (item.type == 'Defender') {
@@ -333,7 +346,25 @@ class Game {
   }
 
   updateGold() {
-    this.topUISection.innerHTML = Math.round(this.gold)
+    
+
+    if (this.goldChanged) {
+      this.topUISection.innerHTML = 'Gold: '
+      if (this.goldChangedCounter < 30) {
+        this.goldChangedCounter += 1
+        if (this.goldChangedAmount < 0) {
+          this.topUISection.innerHTML += '<font color="#d50000">' + Math.round(this.gold) + '  ' + Math.round(this.goldChangedAmount) + '<font>'
+        } else {
+          this.topUISection.innerHTML += '<font color="#64dd17">' + Math.round(this.gold) + '  +' + Math.round(this.goldChangedAmount) + '<font>'
+        }
+        
+      } else {
+        this.goldChanged = false
+        this.goldChangedCounter = 0
+      }
+    } else {
+      this.topUISection.innerHTML = 'Gold: ' + Math.round(this.gold)
+    }
   }
 
   assignBoxTypes(box) {
@@ -460,7 +491,7 @@ class Game {
   minerAction() {
     if (event.target.textContent == 'Upgrade') {
       if (this.gold >= this.itemChosen.cost) {
-        this.gold -= this.itemChosen.cost
+        this.changeGold(this.itemChosen.cost * -1)
         this.itemChosen.upgrade()
         this.updateSideUI()
       }
@@ -474,7 +505,7 @@ class Game {
       }
     } else if (event.target.textContent == 'Upgrade Op') {
       if (this.gold >= this.itemChosen.operator.cost) {
-        this.gold -= this.itemChosen.operator.cost
+        this.changeGold(this.itemChosen.operator.cost * -1)
         this.itemChosen.operator.upgrade()
       }
     }
