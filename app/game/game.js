@@ -30,7 +30,7 @@ class Game {
     this.mineWidth = 1;
     this.width = this.attackWidth + this.defenseWidth + this.mineWidth + 1;
     this.height = 7;
-    this.gold = 25;
+    this.gold = 2500000;
 
     
 
@@ -89,8 +89,21 @@ class Game {
     this.goldChangedCounter = 0;
 
     this.sellPercent = 0.65;
+
+    this.saveGame()
   }
 
+  saveGame() {
+    const save = {
+      game: this
+    }
+
+    try {
+      localStorage.setItem('save', JSON.stringify(save));
+    } catch (error) {
+      console.error(error);
+    }
+  }
   buildGrid() {
     // save game every time grid is updated
     //this.saveGame();
@@ -347,6 +360,8 @@ class Game {
     }
   }
 
+
+
   update() {
 
     this.updateGold()
@@ -374,19 +389,25 @@ class Game {
 
         item.countDown(1 / 60);
         if (item.activated) {
+          
           let attackers = this.items.filter(item => item.type == 'Attacker')
+          
           if (attackers.length > 0) {
-            if (attackers[0].activated) {
-              attackers[0].health -= item.defenseBase
-              if (this.itemChosen == attackers[0]) {
+            
+            let rightAttacker = this.findRightMost(attackers)
+            
+            if (rightAttacker.activated) {
+              rightAttacker.health -= item.defenseBase
+              if (this.itemChosen == rightAttacker) {
                 this.updateSideUI()
               }
-              attackers[0].damaged = true;
+              rightAttacker.damaged = true;
               item.timeElapsed = 0;
               item.activated = false;
               
             }
           }
+          
         }
       } else if (item.type == 'Attacker') {
         if (item.countDown(1/60)){
@@ -402,6 +423,20 @@ class Game {
         this.itemChosen.updateUI = false;
       }
     }
+
+  }
+
+  findRightMost(attackers) {
+
+    let rightMost = attackers[0]
+    
+    attackers.forEach((attacker) => {
+      if (attacker.x > rightMost.x) {
+        rightMost = attacker
+      }
+    })
+    
+    return rightMost
 
   }
 
