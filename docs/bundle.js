@@ -531,7 +531,7 @@ var Game = function () {
     this.mineWidth = 1;
     this.width = this.attackWidth + this.defenseWidth + this.mineWidth + 1;
     this.height = 7;
-    this.gold = 2500000;
+    this.gold = 25;
 
     this.enemyOptions = [new _orc2.default()];
     this.minerOptions = [new _pickaxe2.default(), new _dynamite2.default(), new _railcart2.default(), new _quarry2.default()];
